@@ -1,0 +1,13 @@
+tensorboard
+torchvision
+jupyterlab
+tk
+torch
+scikit-learn
+datetime
+yfinance
+pandas
+numpy
+keras
+autopep8
+tf-agents

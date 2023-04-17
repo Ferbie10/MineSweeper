@@ -1,0 +1,17 @@
+services:
+  jupyter-lab:
+    build: .
+
+    environment:
+      -DISPLAY =${DISPLAY}
+    ports:
+      - "8888:8888"
+    volumes:
+      - ./tf-knugs:/tf-knugs
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: 1
+              capabilities: [gpu]
