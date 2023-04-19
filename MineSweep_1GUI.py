@@ -1,5 +1,4 @@
 import tkinter as tk
-import customtkinter
 import random
 import time
 
@@ -22,21 +21,20 @@ class MinesweeperGUI:
         self.start_time = time.time()
         self.height = 15
         self.width = 15
-        self.mines = 30
+        self.mines = 50
         self.buttons = []
         self._game_end = False
         self.revealed_cells = set()
 
         # Modes: system (default), light, dark
-        customtkinter.set_appearance_mode("System")
-        self.app = customtkinter.CTk()  # create CTk window like you do with the Tk window
+        self.app = tk.Tk()  # create CTk window like you do with the Tk window
         self.app.geometry("1040x940")
         self.app.title("MineSweeper")
 
-        self.Mineframe = customtkinter.CTkFrame(
+        self.Mineframe = tk.Frame(
             master=self.app, height=600, width=940)
         self.Mineframe.grid(row=0, column=0, padx=5, pady=5, sticky="e")
-        self.Statframe = customtkinter.CTkFrame(
+        self.Statframe = tk.Frame(
             master=self.app, height=300, width=940)
         self.Statframe.grid(row=1, column=0, padx=5, pady=5, sticky="s")
         self.button_texts = [[None for _ in range(
@@ -79,16 +77,19 @@ class MinesweeperGUI:
         button = self.buttons[row][col]
         print(f'Row {row}, Col {col}')
         current_text = self.button_texts[row][col]
+        flagged = self.board[row][col]
+
         if current_text == "":
-            flagged = self.board[row][col]
-            button.configure(text="F", text_color='red')
+            button.configure(text="F", fg='red')
             self.button_texts[row][col] = "F"
             self.total_moves += 1
             self.total_num_flags += 1
             if flagged == '*':
                 self.total_correct_flags += 1
+                print(f'total_correct_flags {self.total_correct_flags}')
             else:
                 self.total_incorrect_flags += 1
+                print(f' total_incorrect_flags {self.total_incorrect_flags}')
 
         elif current_text == "F":
             button.configure(text="")
@@ -97,8 +98,11 @@ class MinesweeperGUI:
             self.total_num_flags -= 1
             if flagged == '*':
                 self.total_correct_flags -= 1
+                print(f'total_correct_flags {self.total_correct_flags}')
+
             else:
                 self.total_incorrect_flags -= 1
+                print(f' total_incorrect_flags {self.total_incorrect_flags}')
 
     def get_current_state(self):
         current_state = []
@@ -121,10 +125,10 @@ class MinesweeperGUI:
             if self.board[row][col] == "*":  # Handle mine cell click
                 self.reset_board()
                 return
-            print(self.total_moves)
+
             # Convert the number to a string
             self.buttons[row][col].configure(
-                text=str(self.board[row][col]), width=55, height=35)
+                text=str(self.board[row][col]), width=4, height=2)
             self.buttons[row][col].configure(state=tk.DISABLED)
             self.revealed_cells.add((row, col))
             if self.board[row][col] == 0:
@@ -132,18 +136,18 @@ class MinesweeperGUI:
                     for j in range(-1, 2):
                         if 0 <= row + i < self.height and 0 <= col + j < self.width and (row + i, col + j) not in self.revealed_cells:
                             self.reveal_cell(row + i, col + j)
-                self.total_moves += 1
+            self.total_moves += 1
 
     def reset_board(self):
         self.board = self.generate_board()
         self._game_end = False
         self.revealed_cells.clear()
-
+        self.total_moves = 0
         for i in range(self.height):
             for j in range(self.width):
                 button = self.buttons[i][j]
                 # Change bg=None to bg="SystemButtonFace"
-                button.configure(text="", state=tk.NORMAL, border_color="grey")
+                button.configure(text="", state=tk.NORMAL)
 
         self.current_episode += 1  # Increment the episode counter
         if self.current_episode < self.num_episodes:
@@ -155,16 +159,15 @@ class MinesweeperGUI:
         for i in range(self.height):
             row_buttons = []
             for j in range(self.width):
-                button = customtkinter.CTkButton(self.Mineframe, text="", width=55, height=35, border_color='black',
-                                                 border_width=5, command=lambda i=i, j=j: self.reveal_cell(i, j))
+                button = tk.Button(self.Mineframe, text="", width=4, height=2, fg='black',
+                                   command=lambda i=i, j=j: self.reveal_cell(i, j))
+
                 button.bind("<Button-3>", lambda event, i=i,
                             j=j: self.toggle_flag(event, i, j))
                 button.grid(row=i, column=j)
                 row_buttons.append(button)
             self.buttons.append(row_buttons)
             self.button_texts[i] = [""] * self.width
-
-
 
 
 app = MinesweeperGUI()
