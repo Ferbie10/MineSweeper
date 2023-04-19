@@ -19,12 +19,13 @@ class MinesweeperGUI:
         self.best_correct_flag = 0
         self.best_flag_episode = None
         self.start_time = time.time()
-        self.height = 15
-        self.width = 15
-        self.mines = 50
+        self.height = 4
+        self.width = 4
+        self.mines = 1
         self.buttons = []
         self._game_end = False
         self.revealed_cells = set()
+        self.max_spaces = self.height+self.width - self.mines
 
         # Modes: system (default), light, dark
         self.app = tk.Tk()  # create CTk window like you do with the Tk window
@@ -44,7 +45,38 @@ class MinesweeperGUI:
 
         self.board = self.generate_board()
         self.create_minesweeper()
+        self.create_statistics()
         self.app.mainloop()
+
+    def update_statistics(self):
+        self.stats_label.configure(text=self.generate_stats())
+        # Schedule the next update in 1000ms (1s)
+        self.app.after(1000, self.update_statistics)
+
+    def create_statistics(self):
+        self.stats_label = tk.Label(
+            self.Statframe, text=self.generate_stats(), justify=tk.LEFT)
+        self.stats_label.pack(fill=tk.BOTH, side=tk.TOP, expand=True)
+        self.update_statistics()
+
+    def generate_stats(self):
+        elapsed_time = int(time.time() - self.start_time)
+        best_score = self.best_score if self.best_score is not None else "N/A"
+        best_reward = self.best_reward if self.best_reward is not None else "N/A"
+        best_reward_episode = self.best_reward_episode if self.best_reward_episode is not None else "N/A"
+        best_correct_flag = self.best_correct_flag if self.best_correct_flag is not None else "N/A"
+        best_flag_episode = self.best_flag_episode if self.best_flag_episode is not None else "N/A"
+
+        stats = f"Elapsed time: {elapsed_time}s\n" \
+                f"Total games: {self.current_episode}\n" \
+                f"Total moves: {self.total_moves}\n" \
+                f"Best Number of flags: {best_correct_flag}\n" \
+                f"Best Number of flags episode: {best_flag_episode}\n" \
+                f"Best score: {best_score}\n" \
+                f"Best reward: {best_reward}\n" \
+                f"Best reward episode: {best_reward_episode}"
+
+        return stats
 
     def generate_board(self):
         board = [[0 for _ in range(self.width)] for _ in range(self.height)]
@@ -75,7 +107,6 @@ class MinesweeperGUI:
 
     def toggle_flag(self, event, row, col):
         button = self.buttons[row][col]
-        print(f'Row {row}, Col {col}')
         current_text = self.button_texts[row][col]
         flagged = self.board[row][col]
 
@@ -98,11 +129,12 @@ class MinesweeperGUI:
             self.total_num_flags -= 1
             if flagged == '*':
                 self.total_correct_flags -= 1
-                print(f'total_correct_flags {self.total_correct_flags}')
 
             else:
                 self.total_incorrect_flags -= 1
-                print(f' total_incorrect_flags {self.total_incorrect_flags}')
+
+        # Call max_moves to check if the game should end
+        self.max_moves()
 
     def get_current_state(self):
         current_state = []
@@ -137,23 +169,29 @@ class MinesweeperGUI:
                         if 0 <= row + i < self.height and 0 <= col + j < self.width and (row + i, col + j) not in self.revealed_cells:
                             self.reveal_cell(row + i, col + j)
             self.total_moves += 1
+            self.max_moves()
+
+    def max_moves(self):
+        if len(self.revealed_cells) + self.total_num_flags == (self.height * self.width):
+            self.reset_board()
 
     def reset_board(self):
-        self.board = self.generate_board()
-        self._game_end = False
-        self.revealed_cells.clear()
-        self.total_moves = 0
-        for i in range(self.height):
-            for j in range(self.width):
-                button = self.buttons[i][j]
-                # Change bg=None to bg="SystemButtonFace"
-                button.configure(text="", state=tk.NORMAL)
-
-        self.current_episode += 1  # Increment the episode counter
         if self.current_episode < self.num_episodes:
-            self.reset_board()
+            if self.best_correct_flag < self.total_correct_flags:
+                self.best_correct_flag = self.total_correct_flags
+                self.best_flag_episode = self.current_episode
+
+            self.board = self.generate_board()
+            self._game_end = False
             self.revealed_cells.clear()
-        # Update the board appearance
+            self.total_moves = 0
+            self.total_num_flags = 0
+            self.current_episode += 1
+            for i in range(self.height):
+                for j in range(self.width):
+                    button = self.buttons[i][j]
+                    # Change bg=None to bg="SystemButtonFace"
+                    button.configure(text="", state=tk.NORMAL)
 
     def create_minesweeper(self):
         for i in range(self.height):
