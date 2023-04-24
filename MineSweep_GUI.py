@@ -4,9 +4,12 @@ import time
 
 
 class MinesweeperGUI:
-    def __init__(self):
+    def __init__(self,height,width,mines,num_episodes):
+        self.height = height
+        self.width = width
+        self.mines = mines
+        self.num_episodes = num_episodes
         self.total_moves = 0
-        self.num_episodes = 10
         self.move_counter = 0
         self.current_episode = 0
         self.best_score = None
@@ -19,9 +22,7 @@ class MinesweeperGUI:
         self.best_correct_flag = 0
         self.best_flag_episode = None
         self.start_time = time.time()
-        self.height = 4
-        self.width = 4
-        self.mines = 1
+
         self.buttons = []
         self._game_end = False
         self.revealed_cells = set()
@@ -120,6 +121,7 @@ class MinesweeperGUI:
                 print(f'total_correct_flags {self.total_correct_flags}')
             else:
                 self.total_incorrect_flags += 1
+
                 print(f' total_incorrect_flags {self.total_incorrect_flags}')
 
         elif current_text == "F":
@@ -176,9 +178,10 @@ class MinesweeperGUI:
             self.reset_board()
 
     def reset_board(self):
+        self.sum_flags = self.total_correct_flags - self.total_incorrect_flags
         if self.current_episode < self.num_episodes:
-            if self.best_correct_flag < self.total_correct_flags:
-                self.best_correct_flag = self.total_correct_flags
+            if self.best_correct_flag < self.sum_flags:
+                self.best_correct_flag = self.sum_flags
                 self.best_flag_episode = self.current_episode
 
             self.board = self.generate_board()
@@ -190,7 +193,6 @@ class MinesweeperGUI:
             for i in range(self.height):
                 for j in range(self.width):
                     button = self.buttons[i][j]
-                    # Change bg=None to bg="SystemButtonFace"
                     button.configure(text="", state=tk.NORMAL)
 
     def create_minesweeper(self):
