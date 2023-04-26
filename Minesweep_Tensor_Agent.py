@@ -3,7 +3,8 @@ from tf_agents.networks import q_network
 from tf_agents.environments import tf_py_environment
 from tf_agents.utils import common
 import tensorflow as tf
-
+import Minesweep_Tensor_Env
+import MineSweep_GUI
 # Hyperparameters
 num_iterations = 20000
 initial_collect_steps = 1000
